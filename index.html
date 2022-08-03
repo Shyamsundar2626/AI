@@ -1,0 +1,248 @@
+<html>
+    <head>
+        <title>This is new Project</title>
+        <!-- CSS only -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
+    <body>
+        
+        <div class="container">
+            <h1>Wallmart entry screnner analysis</h1>
+            <p>
+                <label>
+                    Age
+                </label>
+                <input type="text" class="input-group" id="age" maxlength="2">
+                <span id="errorage" style="color: red; font-size: 10px;">
+                    
+                </span>
+            </p>
+            <p>
+                <label>
+                    Gender
+                </label>
+                
+                   
+                <select name="" id="gender" class="form-select">
+                    <option value="">
+                        --select--
+                    </option>
+                    <option value="1">
+                        Male
+                    </option>
+                    <option value="0">
+                        Female
+                    </option>
+                </select>
+                <span id="errorgender" style="color: red; font-size:10px ;">
+                    
+                  </span>
+            </p>
+            <p>
+                <label>
+                  Type
+                </label>
+                <select class="form-select" id="type">
+
+                    <option value="">
+                     --select--
+                    </option>
+                    <option value="1">
+                        Above 18
+                    </option>
+                    <option value="0">
+                        Below 18
+                    </option>
+                </select>
+                <span id="errortype" style="color: red; font-size: 10px;">
+                
+                </span>
+            </p>
+            <p>
+                <button class="btn btn-danger" style="width: 100%;" onclick="senddata()">
+                    Save
+                </button>
+            </p>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>
+                            SL 
+                        </th>
+                        <th>
+                            AGE 
+                        </th>
+                        <th>
+                            TIME
+                        </th>
+                        <th>
+                            GENDER 
+                        </th>
+                        <th>
+                            TYPE 
+                        </th>
+                        
+                    </tr>
+                </thead>
+                <tbody id="tabledata">
+                 
+                </tbody>
+            </table>
+            <canvas id="myChart" width="400" height="100"></canvas>
+        </div>
+        <script>
+           
+            function senddata(){
+                var age = document.getElementById('age').value;
+                if(age==''){
+                    document.getElementById('errorage').innerHTML = "Please enter age";
+                    return false;
+                }
+                else{
+                    document.getElementById('errorage').innerHTML = " ";
+                }
+
+                var ageregx = /^[0-9]+$/;
+                var validage = age.match(ageregx);
+                if(!validage){
+                    document.getElementById('errorage').innerHTML = "Please enter valid age";
+                    return false;
+                }
+                else{
+                    document.getElementById('errorage').innerHTML = " ";
+                }
+
+                if(age <=0){
+                    document.getElementById('errorage').innerHTML = "Please enter valid age";
+                    return false;
+                }
+
+                var gender = document.getElementById('gender').value
+                if(gender==''){
+                    document.getElementById('errorgender').innerHTML = "Please enter gender";
+                    return false;
+
+                }
+                else{
+                    document.getElementById('errorgender').innerHTML = " "
+                }
+                var type = document.getElementById('type').value
+                if(type==''){
+                    document.getElementById('errortype').innerHTML = "Please enter type";
+                    return false;
+                }
+                else{
+                    document.getElementById('errortype').innerHTML = " "
+                }
+
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    document.getElementById("demo").innerHTML = this.responseText;
+                }
+                };
+                xhttp.open("GET", "http://localhost:5000/data/"+age+"/"+gender+"/"+type, true);
+                xhttp.send();
+            }
+
+                var xhttpgetdata = new XMLHttpRequest();
+                xhttpgetdata.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    //document.getElementById("demo").innerHTML = this.responseText;
+                    console.log(this.responseText);
+                    var sdata = JSON.parse(this.responseText);
+                    var sdatalen = sdata.length;
+                    var htmldata = '';
+                    var sl = 0;
+
+                    for(var i = 0; i<sdatalen; i++){
+                       sl++; 
+                     htmldata+= '<tr>';
+                     htmldata+= '<td>'+sl+'</td>';
+                     htmldata+= '<td>'+sdata[i].age+'</td>';
+                     htmldata+= '<td>'+sdata[i].time+'</td>';
+
+                     if(sdata[i].gender == 1){
+                        htmldata+= '<td>Male</td>';
+
+                     }
+                     else{
+                        htmldata+= '<td>female</td>';
+                     }
+                     if(sdata[i].type ==1){
+                        htmldata+= '<td>Above 18 </td>';
+                     }
+                     else{
+                        htmldata+= '<td>Below 18 </td>';
+                     }
+                     
+                     htmldata+= '</tr>';
+                      
+                    }
+
+                    document.getElementById('tabledata').innerHTML = htmldata;
+                }
+                };
+                xhttpgetdata.open("GET", "http://localhost:5000/getalldata", true);
+                xhttpgetdata.send();
+
+                var xhttpgetdatabymonth = new XMLHttpRequest();
+                xhttpgetdatabymonth.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    
+                  var jsondata = JSON.parse(this.responseText)
+                  var jsondatalength = jsondata.length;
+                  var months = []
+                  var visitors = []
+                  
+                  for(var i = 0; i<jsondatalength; i++){
+                    
+                    
+                    visitors.push(jsondata[i].month);
+                  }
+
+                  const ctx = document.getElementById('myChart').getContext('2d');
+            const myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                    datasets: [{
+                        label: '# of visitors',
+                        data: visitors,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+                }
+                };
+                xhttpgetdatabymonth.open("GET", "http://localhost:5000/getdatabymonth", true);
+                xhttpgetdatabymonth.send();
+        
+        </script>
+    </body>
+</html>
